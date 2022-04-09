@@ -1,14 +1,24 @@
-import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
+import { configureStore, ThunkAction, Action, combineReducers } from '@reduxjs/toolkit'
+import { combineEpics, createEpicMiddleware } from 'redux-observable';
+import { incrementDebounceEpic } from './epics/counter';
 
 import counterReducer from './slices/counterSlice';
 
-export function makeStore() {
-  return configureStore({
-    reducer: { counter: counterReducer },
-  })
-}
+const rootEpic = combineEpics(
+  incrementDebounceEpic,
+);
+const epicMiddleware = createEpicMiddleware();
 
-const store = makeStore()
+const rootReducer = combineReducers({
+  counter: counterReducer,
+});
+
+const store = configureStore({
+  reducer: rootReducer,
+  middleware: [epicMiddleware],
+});
+
+epicMiddleware.run(rootEpic);
 
 export type AppState = ReturnType<typeof store.getState>
 
